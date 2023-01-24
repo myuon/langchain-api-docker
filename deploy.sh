@@ -8,7 +8,7 @@ docker push $IMAGE_PATH
 # gcloud run deploy _ --image $IMAGE_PATH --region asia-northeast1
 
 digests=$(gcloud container images list-tags $IMAGE_PATH --sort-by=~TIMESTAMP --format='get(digest)')
-digests_to_delete=$(echo "$digests" | tail -n +6)
+digests_to_delete=$(echo "$digests" | tail -n +3)
 
 for digest in $digests_to_delete; do
   echo $IMAGE_NAME@$digest
