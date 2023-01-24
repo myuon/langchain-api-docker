@@ -1,19 +1,34 @@
 from langchain.llms import OpenAI
 from langchain.agents import initialize_agent
 from langchain.agents import load_tools
-import os
 from dotenv import load_dotenv
+from flask import Flask, request, jsonify
+import os
 
-load_dotenv()
+app = Flask(__name__)
 
-llm = OpenAI(temperature=0)
-tools = load_tools(["google-search", "llm-math"], llm=llm)
 
-agent = initialize_agent(
-    tools,
-    llm,
-    agent="zero-shot-react-description",
-    verbose=True
-)
+def init_agent():
+    llm = OpenAI(temperature=0)
+    tools = load_tools(["google-search", "llm-math"], llm=llm)
 
-agent.run("生命、宇宙、そして万物についての究極の疑問の答えは何ですか？")
+    agent = initialize_agent(
+        tools,
+        llm,
+        agent="zero-shot-react-description",
+    )
+
+    return agent
+
+
+@app.route("/api/langchain", methods=["POST"])
+def api_langchain():
+    data = request.json
+    return jsonify(agent.run(data["query"]))
+
+
+if __name__ == "__main__":
+    load_dotenv()
+
+    agent = init_agent()
+    app.run(port=os.environ.get("PORT", 5000))
