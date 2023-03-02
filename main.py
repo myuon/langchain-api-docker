@@ -1,6 +1,7 @@
-from langchain.llms import OpenAI
+from langchain.llms import OpenAIChat
 from langchain.agents import initialize_agent
 from langchain.agents import load_tools
+from langchain import PromptTemplate, LLMChain
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 import os
@@ -34,9 +35,23 @@ logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
+prefix_messages = [
+    {
+        "role": "system",
+        "content": "You are a helpful assistant for customers who is looking for a good place to stay.",
+    }
+]
+
+prompt = PromptTemplate(
+    template="""Question: {question}
+
+Answer: """,
+    input_variables=["question"]
+)
+
 
 def init_agent():
-    llm = OpenAI(temperature=0)
+    llm = OpenAIChat(temperature=0)
     tools = load_tools(["google-search", "llm-math"], llm=llm)
 
     agent = initialize_agent(
@@ -52,7 +67,9 @@ def init_agent():
 @app.route("/api/langchain", methods=["POST"])
 def api_langchain():
     data = request.json
-    return jsonify({"result": agent.run(data["query"])})
+    result = agent.run(data["query"])
+
+    return jsonify({"result": result})
 
 
 if __name__ == "__main__":
